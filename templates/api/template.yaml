@@ -28,9 +28,6 @@ Parameters:
     Type: String
   OrdersTable:
     Type: String
-  OrdersTableArn:
-    Type: String
-
 
 Mappings:
   CreateOrderMap:

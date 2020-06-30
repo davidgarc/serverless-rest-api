@@ -23,22 +23,27 @@ Parameters:
 Resources:
   ApiStack:
     Type: AWS::CloudFormation::Stack
+    DependsOn:
+      - TablesStack
+      - SharedLayersStack
     Properties:
-      TemplateURL: 'https://s3.us-east-1.amazonaws.com/orders-demo-configs/templates/api/packaged.yaml'
+      TemplateURL: !Join ["", ['https://s3.us-east-1.amazonaws.com/orders-demo-configs-', !Ref 'Environment', '/templates/api/packaged.yaml']]
       Parameters:
         Environment: !Ref Environment
+        AwsLayer: !GetAtt SharedLayersStack.Outputs.AwsLayer
+        OrdersTable: !GetAtt TablesStack.Outputs.OrdersTable
 
   TablesStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: 'https://s3.us-east-1.amazonaws.com/orders-demo-configs/templates/tables/packaged.yaml'
+      TemplateURL: !Join ["", ['https://s3.us-east-1.amazonaws.com/orders-demo-configs-', !Ref 'Environment', '/templates/tables/packaged.yaml']]
       Parameters:
         Environment: !Ref Environment
 
   SharedLayersStack:
     Type: AWS::CloudFormation::Stack
     Properties:
-      TemplateURL: 'https://s3.us-east-1.amazonaws.com/orders-demo-configs/templates/sharedLayer/packaged.yaml'
+      TemplateURL: !Join ["", ['https://s3.us-east-1.amazonaws.com/orders-demo-configs-', !Ref 'Environment', '/templates/sharedLayer/packaged.yaml']]
       Parameters:
         Environment: !Ref Environment
 
