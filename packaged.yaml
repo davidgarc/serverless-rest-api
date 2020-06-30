@@ -1,0 +1,123 @@
+AWSTemplateFormatVersion: '2010-09-09'
+Transform: AWS::Serverless-2016-10-31
+Description: "Dialin Backend Services * List of services used:\n  * API Gateway\n\
+  \  * Lambdas\n  * DDB Tables\n  * Cognito\n\nSample SAM Template for AWS\n"
+Parameters:
+  Environment:
+    Description: Environment
+    Default: dev
+    Type: String
+    AllowedValues:
+    - prod
+    - test
+    - dev
+    ConstraintDescription: Must specify a valid environment dev, test or prod.
+Resources:
+  ApiStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+    - SharedLayersStack
+    Properties:
+      TemplateURL:
+        Fn::Join:
+        - ''
+        - - https://s3.us-east-1.amazonaws.com/dialin-config-
+          - Ref: Environment
+          - /templates/api/packaged.yaml
+      Parameters:
+        Environment:
+          Ref: Environment
+        TwilioLayer:
+          Fn::GetAtt:
+          - SharedLayersStack
+          - Outputs.TwilioLayer
+  WebsocketStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+    - SharedLayersStack
+    - TablesStack
+    Properties:
+      TemplateURL:
+        Fn::Join:
+        - ''
+        - - https://s3.us-east-1.amazonaws.com/dialin-config-
+          - Ref: Environment
+          - /templates/websocket/packaged.yaml
+      Parameters:
+        Environment:
+          Ref: Environment
+        AwsLayer:
+          Fn::GetAtt:
+          - SharedLayersStack
+          - Outputs.AwsLayer
+        ConnectionsTable:
+          Fn::GetAtt:
+          - TablesStack
+          - Outputs.ConnectionsTable
+  AuthStack:
+    Type: AWS::CloudFormation::Stack
+    DependsOn:
+    - SharedLayersStack
+    Properties:
+      TemplateURL:
+        Fn::Join:
+        - ''
+        - - https://s3.us-east-1.amazonaws.com/dialin-config-
+          - Ref: Environment
+          - /templates/auth/packaged.yaml
+      Parameters:
+        Environment:
+          Ref: Environment
+        TemplateLayer:
+          Fn::GetAtt:
+          - SharedLayersStack
+          - Outputs.TemplateLayer
+  SharedLayersStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Join:
+        - ''
+        - - https://s3.us-east-1.amazonaws.com/dialin-config-
+          - Ref: Environment
+          - /templates/sharedLayer/packaged.yaml
+      Parameters:
+        Environment:
+          Ref: Environment
+  TablesStack:
+    Type: AWS::CloudFormation::Stack
+    Properties:
+      TemplateURL:
+        Fn::Join:
+        - ''
+        - - https://s3.us-east-1.amazonaws.com/dialin-config-
+          - Ref: Environment
+          - /templates/tables/packaged.yaml
+      Parameters:
+        Environment:
+          Ref: Environment
+Outputs:
+  DialinIdentityPoolId:
+    Description: Dialin Identity Pool id
+    Value:
+      Fn::GetAtt:
+      - AuthStack
+      - Outputs.DialinIdentityPoolId
+  DialinUserPoolClientId:
+    Description: Dialin User Pool client id
+    Value:
+      Fn::GetAtt:
+      - AuthStack
+      - Outputs.DialinUserPoolClientId
+  DialinUserPoolId:
+    Description: Dialin User Pool id
+    Value:
+      Fn::GetAtt:
+      - AuthStack
+      - Outputs.DialinUserPoolId
+  WebSocketURI:
+    Description: The WSS Protocol URI to connect to
+    Value:
+      Fn::GetAtt:
+      - WebsocketStack
+      - Outputs.WebSocketURI
