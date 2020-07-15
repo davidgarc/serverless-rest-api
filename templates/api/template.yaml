@@ -86,8 +86,8 @@ Resources:
 
 Outputs:
   ApiUri:
-    Description: "API Gateway endpoint URI"
-    Value: !Join [ '', ['https://${ServerlessRestApi}.execute-api.${AWS::Region}.amazonaws.com/', !Ref Environment]]
+    Description: "API Gateway endpoint URL"
+    Value: !Sub "https://${OrdersDemoApi}.execute-api.${AWS::Region}.${AWS::URLSuffix}/${Environment}"
 
   CreateOrderFunction:
     Description: "Create Order Lambda Function ARN"
